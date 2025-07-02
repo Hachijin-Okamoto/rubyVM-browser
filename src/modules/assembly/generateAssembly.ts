@@ -1,6 +1,6 @@
 /* src/modules/assembly/generateAssembly.ts */
 
-import { Node } from "./interface";
+import { astNode } from "./interface";
 import { ASSEMBLY } from "../constants";
 import { getNewFuncLabel } from "./assembly-service";
 
@@ -15,7 +15,8 @@ function getNewLabel(): string {
 
 const functionTable: Map<string, string[]> = new Map<string, string[]>();
 
-export function generateAssembly(node: Node): string[] {
+/* eslint-disable no-case-declarations */
+export function generateAssembly(node: astNode): string[] {
   switch (node.type) {
     case "program_node":
       return generateAssembly(node.statements);
@@ -45,7 +46,7 @@ export function generateAssembly(node: Node): string[] {
           `${ASSEMBLY.FUNCTION_CALL} ${node.name} ${argsCount}`,
         ];
       }
-      
+
       switch (node.name) {
         case "+":
           return [...receiverCode, ...argsCode, ASSEMBLY.ADDITION];
@@ -180,9 +181,13 @@ export function generateAssembly(node: Node): string[] {
     }
 
     case "array_node": {
-      const elementsCode: string[] = node.elements.flatMap((element: Node) => generateAssembly(element));
-      return [...elementsCode, ASSEMBLY.ARRAY_DEFINITION + ` ${node.elements.length}`];
-
+      const elementsCode: string[] = node.elements.flatMap((element: astNode) =>
+        generateAssembly(element),
+      );
+      return [
+        ...elementsCode,
+        ASSEMBLY.ARRAY_DEFINITION + ` ${node.elements.length}`,
+      ];
     }
     default:
       throw new Error(`Unknown node type:${node.type}`);

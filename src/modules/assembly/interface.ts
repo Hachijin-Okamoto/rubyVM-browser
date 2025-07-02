@@ -3,7 +3,7 @@
 /**
  * astに関する型定義をまとめたもの
  */
-export type Node =
+export type astNode =
   | ProgramNode
   | StatementsNode
   | CallNode
@@ -33,7 +33,7 @@ interface ProgramNode {
 
 interface StatementsNode {
   type: "statements_node";
-  body: Node[];
+  body: astNode[];
 }
 
 interface CallNode {
@@ -45,7 +45,7 @@ interface CallNode {
 
 interface ArgumentsNode {
   type: "arguments_node";
-  arguments: Node[];
+  arguments: astNode[];
 }
 
 interface IntegerNode {
@@ -57,7 +57,7 @@ interface LocalVariableWriteNode {
   type: "local_variable_write_node";
   name: string;
   depth?: number;
-  value: Node;
+  value: astNode;
 }
 
 interface LocalVariableReadNode {
@@ -74,7 +74,7 @@ interface LocalVariableTargetNode {
 
 interface IfNode {
   type: "if_node";
-  predicate: Node;
+  predicate: astNode;
   statements: StatementsNode;
 }
 
@@ -88,14 +88,14 @@ interface ForNode {
 interface RangeNode {
   type: "range_node";
   flags?: number;
-  left: Node;
-  right: Node;
+  left: astNode;
+  right: astNode;
 }
 
 interface WhileNode {
   type: "while_node";
   flags?: number;
-  predicate: Node;
+  predicate: astNode;
   statements: StatementsNode;
 }
 
@@ -140,7 +140,7 @@ interface ReturnNode {
 }
 
 interface ArrayNode {
-  type: "array_node",
+  type: "array_node";
   flags?: number;
-  elements: Node[];
+  elements: astNode[];
 }

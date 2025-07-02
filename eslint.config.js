@@ -3,9 +3,44 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
-
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"] },
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.browser } },
-  tseslint.configs.recommended,
+  js.configs.recommended,
+
+  {
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
+      globals: globals.browser,
+    },
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        {
+          allowExpressions: false,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/explicit-module-boundary-types": "warn",
+      "@typescript-eslint/no-inferrable-types": "off",
+    },
+  },
+  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
 ]);
