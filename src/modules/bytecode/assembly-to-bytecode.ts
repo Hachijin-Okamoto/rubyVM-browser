@@ -2,19 +2,7 @@
 
 import { ASSEMBLY } from "../constants";
 import { OPCODES } from "../vm/constants";
-
-// * 変数名をバイトコードに相互変換する用
-
-const variableTable: Map<string, number> = new Map<string, number>();
-let variableId: number = 0;
-function getVariableId(name: string): number {
-  if (!variableTable.has(name)) {
-    variableTable.set(name, variableId++);
-  }
-  return variableTable.get(name)!;
-}
-
-// * ここまで
+import { getVariableId } from "./bytecode-service";
 
 /**
  * アセンブリ風コードをバイトコードに変換する関数
