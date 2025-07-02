@@ -3,6 +3,7 @@
 import { astNode } from "./modules/assembly/interface";
 import { generateAssembly } from "./modules/assembly/generateAssembly";
 import { assemblyToBytecode } from "./modules/bytecode/assembly-to-bytecode";
+import { MyVM } from "./modules/vm/myVM";
 
 const jsonInput: HTMLTextAreaElement = document.getElementById(
   "jsonInput",
@@ -13,6 +14,7 @@ const runButton: HTMLButtonElement = document.getElementById(
 
 const assemblyOutput: HTMLElement = document.getElementById("assemblyOutput")!;
 const bytecodeOutput: HTMLElement = document.getElementById("bytecodeOutput")!;
+const resultOutput: HTMLElement = document.getElementById("resultOutput")!;
 
 runButton.addEventListener("click", () => {
   const ast_data: astNode = JSON.parse(jsonInput.value) as astNode;
@@ -22,4 +24,7 @@ runButton.addEventListener("click", () => {
 
   const bytecode: Uint8Array = assemblyToBytecode(assemblyLines);
   bytecodeOutput.textContent = String(bytecode);
+
+  const vm: MyVM = new MyVM(bytecode);
+  resultOutput.textContent = String(vm.run());
 });
