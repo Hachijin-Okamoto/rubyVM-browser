@@ -1,13 +1,29 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ruby VM Viewer</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    pre { background: #f0f0f0; padding: 0.5rem; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Ruby VM - AST 実行ビューア</h1>
+
+  <label for="jsonInput">AST（JSON形式）を貼り付け：</label><br />
+  <textarea id="jsonInput" placeholder='{"type": "program", "body": [...]}'></textarea><br />
+  <button id="runButton">Run</button>
+
+  <h2>アセンブリ</h2>
+  <pre id="assemblyOutput"></pre>
+
+  <h2>バイトコード</h2>
+  <pre id="bytecodeOutput"></pre>
+
+  <h2>実行結果</h2>
+  <pre id="resultOutput"></pre>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
