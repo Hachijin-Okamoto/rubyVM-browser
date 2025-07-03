@@ -2,8 +2,8 @@
 
 import { astNode } from "./modules/assembly/interface/astNode";
 import { generateAssembly } from "./modules/assembly/generateAssembly";
-// import { assemblyToBytecode } from "./modules/bytecode/assembly-to-bytecode";
-// import { MyVM } from "./modules/vm/myVM";
+import { assemblyToBytecode } from "./modules/bytecode/assembly-to-bytecode";
+import { MyVM } from "./modules/vm/myVM";
 import { assemblyLine } from "./modules/assembly/interface/assemblyLine";
 
 const jsonInput: HTMLTextAreaElement = document.getElementById(
@@ -14,24 +14,34 @@ const runButton: HTMLButtonElement = document.getElementById(
 ) as HTMLButtonElement;
 
 const assemblyOutput: HTMLElement = document.getElementById("assemblyOutput")!;
-const _bytecodeOutput: HTMLElement = document.getElementById("bytecodeOutput")!;
-const _resultOutput: HTMLElement = document.getElementById("resultOutput")!;
+const bytecodeOutput: HTMLElement = document.getElementById("bytecodeOutput")!;
+const resultOutput: HTMLElement = document.getElementById("resultOutput")!;
 
 runButton.addEventListener("click", () => {
   const ast_data: astNode = JSON.parse(jsonInput.value) as astNode;
+  let assemblyLines: assemblyLine[];
 
   try {
-    const assemblyLines: assemblyLine[] = generateAssembly(ast_data);
+    assemblyLines = generateAssembly(ast_data);
     assemblyOutput.textContent = JSON.stringify(assemblyLines);
   } catch (Error) {
     assemblyOutput.textContent = String(Error);
+    return;
   }
 
-  /*
-  const bytecode: Uint8Array = assemblyToBytecode(assemblyLines);
-  bytecodeOutput.textContent = String(bytecode);
+  let bytecode: Uint8Array;
+  try {
+    bytecode = assemblyToBytecode(assemblyLines);
+    bytecodeOutput.textContent = String(bytecode.join(" "));
+  } catch (Error) {
+    bytecodeOutput.textContent = String(Error);
+    return;
+  }
 
-  const vm: MyVM = new MyVM(bytecode);
-  resultOutput.textContent = String(vm.run());
-  */
+  try {
+    const vm: MyVM = new MyVM(bytecode);
+    resultOutput.textContent = String(vm.run());
+  } catch (Error) {
+    resultOutput.textContent = String(Error);
+  }
 });

@@ -30,11 +30,17 @@ export function generateAssembly(node: astNode): assemblyLine[] {
     }
 
     case "integer_node": {
-      return [{ name: ASSEMBLY.NUMBER, value: node.value } as Instruction];
+      return [
+        {
+          type: "instruction",
+          name: ASSEMBLY.NUMBER,
+          value: node.value,
+        } as Instruction,
+      ];
     }
     case "call_node": {
       if (node.name === "exit") {
-        return [{ name: ASSEMBLY.END } as Instruction];
+        return [{ type: "instruction", name: ASSEMBLY.END } as Instruction];
       }
 
       const receiverCode: assemblyLine[] = node.receiver
@@ -50,6 +56,7 @@ export function generateAssembly(node: astNode): assemblyLine[] {
           ...receiverCode,
           ...argsCode,
           {
+            type: "function_call",
             name: ASSEMBLY.FUNCTION_CALL,
             functionName: node.name,
             argumentCount: argsCount,
@@ -62,97 +69,122 @@ export function generateAssembly(node: astNode): assemblyLine[] {
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.ADDITION } as Instruction,
+            { type: "instruction", name: ASSEMBLY.ADDITION } as Instruction,
           ];
         case "-":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.SUBTRACTION } as Instruction,
+            { type: "instruction", name: ASSEMBLY.SUBTRACTION } as Instruction,
           ];
         case "*":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.MULTIPLICATION } as Instruction,
+            {
+              type: "instruction",
+              name: ASSEMBLY.MULTIPLICATION,
+            } as Instruction,
           ];
         case "/":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.DIVISION } as Instruction,
+            { type: "instruction", name: ASSEMBLY.DIVISION } as Instruction,
           ];
         case "%":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.REMAINDER } as Instruction,
+            { type: "instruction", name: ASSEMBLY.REMAINDER } as Instruction,
           ];
         case "**":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.POWER } as Instruction,
+            { type: "instruction", name: ASSEMBLY.POWER } as Instruction,
           ];
         case ">":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.GREATER } as Instruction,
+            { type: "instruction", name: ASSEMBLY.GREATER } as Instruction,
           ];
         case "<":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.LESS } as Instruction,
+            { type: "instruction", name: ASSEMBLY.LESS } as Instruction,
           ];
         case ">=":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.GREATER_EQUAL } as Instruction,
+            {
+              type: "instruction",
+              name: ASSEMBLY.GREATER_EQUAL,
+            } as Instruction,
           ];
         case "<=":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.LESS_EQUAL } as Instruction,
+            { type: "instruction", name: ASSEMBLY.LESS_EQUAL } as Instruction,
           ];
         case "==":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.EQUAL } as Instruction,
+            { type: "instruction", name: ASSEMBLY.EQUAL } as Instruction,
           ];
         case "!=":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.NOT_EQUAL } as Instruction,
+            { type: "instruction", name: ASSEMBLY.NOT_EQUAL } as Instruction,
           ];
         case "puts":
-          return [...argsCode, { name: ASSEMBLY.OUTPUT } as Instruction];
+          return [
+            ...argsCode,
+            { type: "instruction", name: ASSEMBLY.OUTPUT } as Instruction,
+          ];
         case "print":
-          return [...argsCode, { name: ASSEMBLY.OUTPUT } as Instruction];
+          return [
+            ...argsCode,
+            { type: "instruction", name: ASSEMBLY.OUTPUT } as Instruction,
+          ];
         case "[]=":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.ARRAY_ASSIGNMENT } as Instruction,
+            {
+              type: "instruction",
+              name: ASSEMBLY.ARRAY_ASSIGNMENT,
+            } as Instruction,
           ];
         case "[]":
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.ARRAY_REFERRENCE } as Instruction,
+            {
+              type: "instruction",
+              name: ASSEMBLY.ARRAY_REFERRENCE,
+            } as Instruction,
           ];
         case "shuffle":
-          return [...argsCode, { name: ASSEMBLY.SHUFFLE } as Instruction];
+          return [
+            ...argsCode,
+            { type: "instruction", name: ASSEMBLY.SHUFFLE } as Instruction,
+          ];
         default:
           return [
             ...receiverCode,
             ...argsCode,
-            { name: ASSEMBLY.FUNCTION_CALL, value: node.name } as Instruction,
+            {
+              type: "instruction",
+              name: ASSEMBLY.FUNCTION_CALL,
+              value: node.name,
+            } as Instruction,
           ];
       }
     }
@@ -165,12 +197,22 @@ export function generateAssembly(node: astNode): assemblyLine[] {
       const valueCode: assemblyLine[] = generateAssembly(node.value);
       return [
         ...valueCode,
-        { name: ASSEMBLY.ASSIGNMENT, value: node.name } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.ASSIGNMENT,
+          value: node.name,
+        } as Instruction,
       ];
     }
 
     case "local_variable_read_node": {
-      return [{ name: ASSEMBLY.REFERENCE, value: node.name } as Instruction];
+      return [
+        {
+          type: "instruction",
+          name: ASSEMBLY.REFERENCE,
+          value: node.name,
+        } as Instruction,
+      ];
     }
 
     case "if_node": {
@@ -181,7 +223,11 @@ export function generateAssembly(node: astNode): assemblyLine[] {
 
       return [
         ...conditionCode,
-        { name: ASSEMBLY.JUMP_IF_FALSE, value: endLabel } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.JUMP_IF_FALSE,
+          value: endLabel,
+        } as Instruction,
         ...bodyCode,
         endLabel,
       ];
@@ -202,18 +248,34 @@ export function generateAssembly(node: astNode): assemblyLine[] {
 
       return [
         ...startCode,
-        { name: ASSEMBLY.ASSIGNMENT, value: indexName } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.ASSIGNMENT,
+          value: indexName,
+        } as Instruction,
         loopStartLabel,
         ...indexCode,
         ...endCode,
-        { name: ASSEMBLY.LESS_EQUAL } as Instruction,
-        { name: ASSEMBLY.JUMP_IF_FALSE, value: loopEndLabel } as Instruction,
+        { type: "instruction", name: ASSEMBLY.LESS_EQUAL } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.JUMP_IF_FALSE,
+          value: loopEndLabel,
+        } as Instruction,
         ...bodyCode,
         ...indexCode,
-        { name: ASSEMBLY.NUMBER, value: 1 } as Instruction,
-        { name: ASSEMBLY.ADDITION } as Instruction,
-        { name: ASSEMBLY.ASSIGNMENT, value: indexName } as Instruction,
-        { name: ASSEMBLY.JUMP, value: loopStartLabel } as Instruction,
+        { type: "instruction", name: ASSEMBLY.NUMBER, value: 1 } as Instruction,
+        { type: "instruction", name: ASSEMBLY.ADDITION } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.ASSIGNMENT,
+          value: indexName,
+        } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.JUMP,
+          value: loopStartLabel,
+        } as Instruction,
         loopEndLabel,
       ];
     }
@@ -231,16 +293,30 @@ export function generateAssembly(node: astNode): assemblyLine[] {
       return [
         loopStartLabel,
         ...predicateCode,
-        { name: ASSEMBLY.JUMP_IF_FALSE, value: loopEndLabel } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.JUMP_IF_FALSE,
+          value: loopEndLabel,
+        } as Instruction,
         ...bodyCode,
-        { name: ASSEMBLY.JUMP, value: loopStartLabel } as Instruction,
+        {
+          type: "instruction",
+          name: ASSEMBLY.JUMP,
+          value: loopStartLabel,
+        } as Instruction,
         loopEndLabel,
       ];
     }
 
     case "string_node": {
       const stringValue: string = node.unescaped;
-      return [{ name: ASSEMBLY.STRING, value: stringValue } as Instruction];
+      return [
+        {
+          type: "instruction",
+          name: ASSEMBLY.STRING,
+          value: stringValue,
+        } as Instruction,
+      ];
     }
 
     case "def_node": {
@@ -255,7 +331,10 @@ export function generateAssembly(node: astNode): assemblyLine[] {
 
     case "return_node": {
       const returnValueCode: assemblyLine[] = generateAssembly(node.arguments);
-      return [...returnValueCode, { name: ASSEMBLY.RETURN } as Instruction];
+      return [
+        ...returnValueCode,
+        { type: "instruction", name: ASSEMBLY.RETURN } as Instruction,
+      ];
     }
 
     case "array_node": {
@@ -265,6 +344,7 @@ export function generateAssembly(node: astNode): assemblyLine[] {
       return [
         ...elementsCode,
         {
+          type: "instruction",
           name: ASSEMBLY.ARRAY_DEFINITION,
           value: node.elements.length,
         } as Instruction,

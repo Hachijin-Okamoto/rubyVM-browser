@@ -5,6 +5,8 @@ import { OPCODES } from "./constants";
 
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 export class MyVM {
   pc: number;
 

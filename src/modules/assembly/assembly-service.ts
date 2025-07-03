@@ -7,7 +7,7 @@ import { FunctionLabel, LoopLabel } from "./interface/assemblyLine";
  * @returns ラベル（関数名を平文で含む）
  */
 export function getNewFuncLabel(name: string): FunctionLabel {
-  return { name } as FunctionLabel;
+  return { type: "function_label", name } as FunctionLabel;
 }
 
 let labelId: number = 0;
@@ -16,5 +16,5 @@ let labelId: number = 0;
  * @returns ラベル（ジャンプ用）
  */
 export function getNewLabel(): LoopLabel {
-  return { name: String(labelId++) } as LoopLabel;
+  return { type: "loop_label", name: String(labelId++) } as LoopLabel;
 }

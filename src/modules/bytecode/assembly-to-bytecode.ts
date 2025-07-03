@@ -1,80 +1,88 @@
 /* src/modules/bytecode/assembly-to-bytecode.ts */
 
+import {
+  assemblyLine,
+  FunctionLabel,
+} from "../assembly/interface/assemblyLine";
 import { ASSEMBLY } from "../constants";
 import { OPCODES } from "../vm/constants";
-import { getVariableId } from "./bytecode-service";
+import { getVariableId, calcInstrBytes } from "./bytecode-service";
 
 /**
  * アセンブリ風コードをバイトコードに変換する関数
  * @param assemblyLines 関数"generateAssembly"によって生成されたアセンブリ風コード
  * @returns バイトコード列（10進表記）
  */
-export function assemblyToBytecode(assemblyLines: string[]): Uint8Array {
-  const exceptLabelLines: string[] = [];
-  const labelTable: Map<string, number> = new Map<string, number>();
+export function assemblyToBytecode(assemblyLines: assemblyLine[]): Uint8Array {
+  const exceptLabelLines: assemblyLine[] = [];
+  const labelTable: Map<assemblyLine, number> = new Map<assemblyLine, number>();
   let labelAddress: number = 0;
 
-  // ラベルの位置を保存
+  // ラベルの位置を計算・保存
   for (const line of assemblyLines) {
-    if (line.endsWith(":")) {
-      const label: string = line.slice(0, -1);
-      labelTable.set(label, labelAddress);
+    console.log(line.type);
+    if (line.type === "loop_label" || line.type === "function_label") {
+      labelTable.set(line, labelAddress);
       continue;
     }
 
-    const [instr, ...args] = line.split(" ");
     exceptLabelLines.push(line);
 
-    if (instr === ASSEMBLY.STRING) {
-      const _encoded: Uint8Array = new TextEncoder().encode(args.join(" "));
-      labelAddress += 1 + 2 + _encoded.length;
-    } else {
-      labelAddress += 1 + args.length * 2;
-    }
+    labelAddress += calcInstrBytes(line);
   }
 
+  // 実際に変換
   const bytes: number[] = [];
-
   for (const line of exceptLabelLines) {
-    const [instr, ...args] = line.split(" ");
-
-    const opcode: number = OPCODES[instr];
+    const opcode: number = OPCODES[line.name];
     if (opcode === undefined) {
-      throw new Error(`Unknown instruction: ${instr}`);
+      throw new Error(`Unknown instruction: ${line.name}`);
     }
 
     bytes.push(opcode);
 
-    // TODO:ここもうちょっときれいにする
-    for (const arg of args) {
-      let num: number;
-      if (instr === ASSEMBLY.STRING) {
-        const encoded: Uint8Array = new TextEncoder().encode(arg);
+    let oprand: number;
+    if (line.type === "instruction") {
+      if (line.value === undefined) {
+        continue;
+      } else if (line.name === ASSEMBLY.STRING) {
+        const encoded: Uint8Array = new TextEncoder().encode(
+          line.value as string,
+        );
         bytes.push(encoded.length & 0xff);
         bytes.push((encoded.length >> 8) & 0xff);
         bytes.push(...encoded);
         continue;
-      }
-
-      if (instr === ASSEMBLY.FUNCTION_CALL) {
-        if (!Number.isNaN(Number(arg))) {
-          num = Number(arg);
-        } else {
-          num = labelTable.get(`LABEL_${arg}`)!;
-        }
-      } else if (!Number.isNaN(Number(arg))) {
-        num = Number(arg);
-      } else if (labelTable.has(arg)) {
-        num = labelTable.get(arg)!;
       } else {
-        num = getVariableId(arg);
+        if (!Number.isNaN(Number(line.value))) {
+          oprand = Number(line.value);
+        } else {
+          oprand = getVariableId(line.value as string);
+        }
       }
-
-      // リトルエンディアン
-      bytes.push(num & 0xff);
-      bytes.push((num >> 8) & 0xff);
     }
+    // TODO:ここ直す
+    else if (line.type === "function_call") {
+      oprand = labelTable.get({
+        type: "function_label",
+        name: line.functionName,
+      } as FunctionLabel)!;
+      bytes.push(oprand & 0xff);
+      bytes.push((oprand >> 8) & 0xff);
+
+      oprand = line.argumentCount;
+      bytes.push(oprand & 0xff);
+      bytes.push((oprand >> 8) & 0xff);
+      continue;
+    } else {
+      throw new Error(`Unknown assembly type: ${line.type}`);
+    }
+
+    // リトルエンディアン
+    bytes.push(oprand & 0xff);
+    bytes.push((oprand >> 8) & 0xff);
   }
 
+  console.log(bytes);
   return new Uint8Array(bytes);
 }
