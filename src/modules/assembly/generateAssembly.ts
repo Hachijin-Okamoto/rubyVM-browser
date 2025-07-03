@@ -1,40 +1,46 @@
 /* src/modules/assembly/generateAssembly.ts */
 
-import { astNode } from "./interface";
+import { astNode } from "./interface/astNode";
 import { ASSEMBLY } from "../constants";
-import { getNewFuncLabel } from "./assembly-service";
+import { getNewFuncLabel, getNewLabel } from "./assembly-service";
+import {
+  assemblyLine,
+  Instruction,
+  FunctionCall,
+  LoopLabel,
+  FunctionLabel,
+} from "./interface/assemblyLine";
 
-// * ジャンプ命令に使用するラベルの作成用
-
-let labelId: number = 0;
-function getNewLabel(): string {
-  return `LABEL_${labelId++}`;
-}
-
-// * ここまで
-
+// key: 関数名 value: 引数の数
 const functionTable: Map<string, string[]> = new Map<string, string[]>();
 
-/* eslint-disable no-case-declarations */
-export function generateAssembly(node: astNode): string[] {
+/**
+ * ASTからアセンブリ列に変換する関数
+ * @param node ASTのjsonファイルをnode型に変換したもの
+ * @returns アセンブリ列
+ */
+export function generateAssembly(node: astNode): assemblyLine[] {
   switch (node.type) {
-    case "program_node":
+    case "program_node": {
       return generateAssembly(node.statements);
+    }
 
-    case "statements_node":
+    case "statements_node": {
       return node.body.flatMap(generateAssembly);
+    }
 
-    case "integer_node":
-      return [ASSEMBLY.NUMBER + ` ${node.value}`];
-
+    case "integer_node": {
+      return [{ name: ASSEMBLY.NUMBER, value: node.value } as Instruction];
+    }
     case "call_node": {
       if (node.name === "exit") {
-        return [ASSEMBLY.END];
+        return [{ name: ASSEMBLY.END } as Instruction];
       }
-      const receiverCode: string[] = node.receiver
+
+      const receiverCode: assemblyLine[] = node.receiver
         ? generateAssembly(node.receiver)
         : [];
-      const argsCode: string[] =
+      const argsCode: assemblyLine[] =
         node.arguments.arguments.flatMap(generateAssembly);
 
       if (functionTable.has(node.name)) {
@@ -43,150 +49,225 @@ export function generateAssembly(node: astNode): string[] {
         return [
           ...receiverCode,
           ...argsCode,
-          `${ASSEMBLY.FUNCTION_CALL} ${node.name} ${argsCount}`,
+          {
+            name: ASSEMBLY.FUNCTION_CALL,
+            functionName: node.name,
+            argumentCount: argsCount,
+          } as FunctionCall,
         ];
       }
 
       switch (node.name) {
         case "+":
-          return [...receiverCode, ...argsCode, ASSEMBLY.ADDITION];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.ADDITION } as Instruction,
+          ];
         case "-":
-          return [...receiverCode, ...argsCode, ASSEMBLY.SUBTRACTION];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.SUBTRACTION } as Instruction,
+          ];
         case "*":
-          return [...receiverCode, ...argsCode, ASSEMBLY.MULTIPLICATION];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.MULTIPLICATION } as Instruction,
+          ];
         case "/":
-          return [...receiverCode, ...argsCode, ASSEMBLY.DIVISION];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.DIVISION } as Instruction,
+          ];
         case "%":
-          return [...receiverCode, ...argsCode, ASSEMBLY.REMAINDER];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.REMAINDER } as Instruction,
+          ];
         case "**":
-          return [...receiverCode, ...argsCode, ASSEMBLY.POWER];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.POWER } as Instruction,
+          ];
         case ">":
-          return [...receiverCode, ...argsCode, ASSEMBLY.GREATER];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.GREATER } as Instruction,
+          ];
         case "<":
-          return [...receiverCode, ...argsCode, ASSEMBLY.LESS];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.LESS } as Instruction,
+          ];
         case ">=":
-          return [...receiverCode, ...argsCode, ASSEMBLY.GREATER_EQUAL];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.GREATER_EQUAL } as Instruction,
+          ];
         case "<=":
-          return [...receiverCode, ...argsCode, ASSEMBLY.LESS_EQUAL];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.LESS_EQUAL } as Instruction,
+          ];
         case "==":
-          return [...receiverCode, ...argsCode, ASSEMBLY.EQUAL];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.EQUAL } as Instruction,
+          ];
         case "!=":
-          return [...receiverCode, ...argsCode, ASSEMBLY.NOT_EQUAL];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.NOT_EQUAL } as Instruction,
+          ];
         case "puts":
-          return [...argsCode, ASSEMBLY.OUTPUT];
+          return [...argsCode, { name: ASSEMBLY.OUTPUT } as Instruction];
         case "print":
-          return [...argsCode, ASSEMBLY.OUTPUT];
+          return [...argsCode, { name: ASSEMBLY.OUTPUT } as Instruction];
         case "[]=":
-          return [...receiverCode, ...argsCode, ASSEMBLY.ARRAY_ASSIGNMENT];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.ARRAY_ASSIGNMENT } as Instruction,
+          ];
         case "[]":
-          return [...receiverCode, ...argsCode, ASSEMBLY.ARRAY_REFERRENCE];
+          return [
+            ...receiverCode,
+            ...argsCode,
+            { name: ASSEMBLY.ARRAY_REFERRENCE } as Instruction,
+          ];
         case "shuffle":
-          return [...argsCode, ASSEMBLY.SHUFFLE];
+          return [...argsCode, { name: ASSEMBLY.SHUFFLE } as Instruction];
         default:
           return [
             ...receiverCode,
             ...argsCode,
-            ASSEMBLY.FUNCTION_CALL + ` ${node.name}`,
+            { name: ASSEMBLY.FUNCTION_CALL, value: node.name } as Instruction,
           ];
       }
     }
 
-    case "arguments_node":
+    case "arguments_node": {
       return node.arguments.flatMap(generateAssembly);
+    }
 
-    case "local_variable_write_node":
-      const valueCode: string[] = generateAssembly(node.value);
-      return [...valueCode, ASSEMBLY.ASSIGNMENT + ` ${node.name}`];
+    case "local_variable_write_node": {
+      const valueCode: assemblyLine[] = generateAssembly(node.value);
+      return [
+        ...valueCode,
+        { name: ASSEMBLY.ASSIGNMENT, value: node.name } as Instruction,
+      ];
+    }
 
-    case "local_variable_read_node":
-      return [ASSEMBLY.REFERENCE + ` ${node.name}`];
+    case "local_variable_read_node": {
+      return [{ name: ASSEMBLY.REFERENCE, value: node.name } as Instruction];
+    }
 
-    case "if_node":
-      const conditionCode: string[] = generateAssembly(node.predicate);
-      const bodyCode: string[] = generateAssembly(node.statements);
+    case "if_node": {
+      const conditionCode: assemblyLine[] = generateAssembly(node.predicate);
+      const bodyCode: assemblyLine[] = generateAssembly(node.statements);
 
-      const endLabel: string = getNewLabel();
+      const endLabel: LoopLabel = getNewLabel();
 
       return [
         ...conditionCode,
-        ASSEMBLY.JUMP_IF_FALSE + ` ${endLabel}`,
+        { name: ASSEMBLY.JUMP_IF_FALSE, value: endLabel } as Instruction,
         ...bodyCode,
-        `${endLabel}:`,
+        endLabel,
       ];
+    }
 
-    case "for_node":
+    case "for_node": {
       const indexName: string = node.index.name;
-      const indexCode: string[] = generateAssembly({
+      const indexCode: assemblyLine[] = generateAssembly({
         type: "local_variable_read_node",
         name: indexName,
       });
-      const startCode: string[] = generateAssembly(node.collection.left);
-      const endCode: string[] = generateAssembly(node.collection.right);
-      const _bodyCode: string[] = generateAssembly(node.statements);
+      const startCode: assemblyLine[] = generateAssembly(node.collection.left);
+      const endCode: assemblyLine[] = generateAssembly(node.collection.right);
+      const bodyCode: assemblyLine[] = generateAssembly(node.statements);
 
-      const loopStartLabel: string = getNewLabel();
-      const loopEndLabel: string = getNewLabel();
+      const loopStartLabel: LoopLabel = getNewLabel();
+      const loopEndLabel: LoopLabel = getNewLabel();
 
       return [
         ...startCode,
-        ASSEMBLY.ASSIGNMENT + ` ${indexName}`,
-        `${loopStartLabel}:`,
+        { name: ASSEMBLY.ASSIGNMENT, value: indexName } as Instruction,
+        loopStartLabel,
         ...indexCode,
         ...endCode,
-        ASSEMBLY.LESS_EQUAL,
-        ASSEMBLY.JUMP_IF_FALSE + ` ${loopEndLabel}`,
-        ..._bodyCode,
+        { name: ASSEMBLY.LESS_EQUAL } as Instruction,
+        { name: ASSEMBLY.JUMP_IF_FALSE, value: loopEndLabel } as Instruction,
+        ...bodyCode,
         ...indexCode,
-        ASSEMBLY.NUMBER + " 1",
-        ASSEMBLY.ADDITION,
-        ASSEMBLY.ASSIGNMENT + ` ${indexName}`,
-        ASSEMBLY.JUMP + ` ${loopStartLabel}`,
-        `${loopEndLabel}:`,
+        { name: ASSEMBLY.NUMBER, value: 1 } as Instruction,
+        { name: ASSEMBLY.ADDITION } as Instruction,
+        { name: ASSEMBLY.ASSIGNMENT, value: indexName } as Instruction,
+        { name: ASSEMBLY.JUMP, value: loopStartLabel } as Instruction,
+        loopEndLabel,
       ];
+    }
 
-    case "range_node":
+    case "range_node": {
       return [];
+    }
 
-    case "while_node":
-      const _loopStartLabel: string = getNewLabel();
-      const _loopEndLabel: string = getNewLabel();
-      const predicateCode: string[] = generateAssembly(node.predicate);
-      const __bodyCode: string[] = generateAssembly(node.statements);
+    case "while_node": {
+      const loopStartLabel: LoopLabel = getNewLabel();
+      const loopEndLabel: LoopLabel = getNewLabel();
+      const predicateCode: assemblyLine[] = generateAssembly(node.predicate);
+      const bodyCode: assemblyLine[] = generateAssembly(node.statements);
 
       return [
-        `${_loopStartLabel}:`,
+        loopStartLabel,
         ...predicateCode,
-        ASSEMBLY.JUMP_IF_FALSE + ` ${_loopEndLabel}`,
-        ...__bodyCode,
-        ASSEMBLY.JUMP + ` ${_loopStartLabel}`,
-        `${_loopEndLabel}:`,
+        { name: ASSEMBLY.JUMP_IF_FALSE, value: loopEndLabel } as Instruction,
+        ...bodyCode,
+        { name: ASSEMBLY.JUMP, value: loopStartLabel } as Instruction,
+        loopEndLabel,
       ];
+    }
 
-    case "string_node":
+    case "string_node": {
       const stringValue: string = node.unescaped;
-      return [ASSEMBLY.STRING + ` ${stringValue}`];
+      return [{ name: ASSEMBLY.STRING, value: stringValue } as Instruction];
+    }
 
-    case "def_node":
+    case "def_node": {
       functionTable.set(
         node.name,
         node.parameters.requireds.map((param) => param.name),
       );
-      const functionDefnitionLabel: string = getNewFuncLabel(node.name);
-      const ___bodyCode: string[] = generateAssembly(node.body);
-      return [`${functionDefnitionLabel}:`, ...___bodyCode]; // 常にreturn文が書かれているという想定
+      const functionDefnitionLabel: FunctionLabel = getNewFuncLabel(node.name);
+      const bodyCode: assemblyLine[] = generateAssembly(node.body);
+      return [functionDefnitionLabel, ...bodyCode]; // 常にreturn文が書かれているという想定
+    }
 
     case "return_node": {
-      const returnValueCode: string[] = generateAssembly(node.arguments);
-      return [...returnValueCode, ASSEMBLY.RETURN];
+      const returnValueCode: assemblyLine[] = generateAssembly(node.arguments);
+      return [...returnValueCode, { name: ASSEMBLY.RETURN } as Instruction];
     }
 
     case "array_node": {
-      const elementsCode: string[] = node.elements.flatMap((element: astNode) =>
-        generateAssembly(element),
+      const elementsCode: assemblyLine[] = node.elements.flatMap(
+        (element: astNode) => generateAssembly(element),
       );
       return [
         ...elementsCode,
-        ASSEMBLY.ARRAY_DEFINITION + ` ${node.elements.length}`,
+        {
+          name: ASSEMBLY.ARRAY_DEFINITION,
+          value: node.elements.length,
+        } as Instruction,
       ];
     }
     default:
