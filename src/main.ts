@@ -6,6 +6,8 @@ import { assemblyToBytecode } from "./modules/bytecode/assembly-to-bytecode";
 import { MyVM } from "./modules/vm/myVM";
 import { assemblyLine } from "./modules/assembly/interface/assemblyLine";
 import { formatAssemblyLine } from "./modules/assembly/assembly-service";
+import { handleAssemblyClick } from "./ui/dom-service";
+import { VMLogEntry } from "./modules/vm/interface/VMLog";
 
 const jsonInput: HTMLTextAreaElement = document.getElementById(
   "jsonInput",
@@ -13,28 +15,41 @@ const jsonInput: HTMLTextAreaElement = document.getElementById(
 const runButton: HTMLButtonElement = document.getElementById(
   "runButton",
 ) as HTMLButtonElement;
-// アセンブリ列を押したときにループ回数
-const assemblyLoopList: HTMLElement = document.getElementById(
-  "assemblyLoopList",
-) as HTMLElement;
 
 const assemblyOutput: HTMLElement = document.getElementById("assemblyOutput")!;
 const bytecodeOutput: HTMLElement = document.getElementById("bytecodeOutput")!;
 const resultOutput: HTMLElement = document.getElementById("resultOutput")!;
-const stackPreview: HTMLElement = document.getElementById("stackPreview")!;
-
-const stackLogs = [
-  { pc: 0, stackSnapshot: [] },
-  { pc: 1, stackSnapshot: ["Hello"] },
-  { pc: 2, stackSnapshot: [] },
-];
 
 runButton.addEventListener("click", () => {
   const ast_data: astNode = JSON.parse(jsonInput.value) as astNode;
-  let assemblyLines: assemblyLine[];
+
+  let assemblyLines: assemblyLine[] = [];
+  let bytecode: Uint8Array;
+  let stackLogs: VMLogEntry[];
 
   try {
     assemblyLines = generateAssembly(ast_data);
+    bytecode = assemblyToBytecode(assemblyLines);
+    console.log(bytecode);
+    bytecodeOutput.textContent = String(bytecode.join(" "));
+    const vm: MyVM = new MyVM(bytecode);
+    const { result, stackLogs: logs } = vm.runWithLog();
+    resultOutput.textContent = result.join("\n");
+    stackLogs = logs;
+  } catch (Error) {
+    console.log(Error);
+  }
+
+  assemblyLines.forEach((assemblyLine, index) => {
+    const line = document.createElement("div");
+    line.textContent = formatAssemblyLine(assemblyLine);
+    line.addEventListener("click", () => {
+      handleAssemblyClick(index, stackLogs);
+    });
+    assemblyOutput.appendChild(line);
+  });
+
+  /*
     assemblyLines.forEach((assemblyLine, index) => {
       const line = document.createElement("div");
       line.textContent = formatAssemblyLine(assemblyLine);
@@ -51,25 +66,5 @@ runButton.addEventListener("click", () => {
   } catch (Error) {
     assemblyOutput.textContent = String(Error);
     return;
-  }
-
-  let bytecode: Uint8Array;
-  try {
-    bytecode = assemblyToBytecode(assemblyLines);
-    bytecodeOutput.textContent = String(bytecode.join(" "));
-  } catch (Error) {
-    bytecodeOutput.textContent = String(Error);
-    return;
-  }
-
-  try {
-    const vm: MyVM = new MyVM(bytecode);
-    const stackLogs = vm.runWithLog().stackLogs;
-    console.log(stackLogs);
-    //resultOutput.textContent = String(vm.runWithLog().result);
-  } catch (Error) {
-    resultOutput.textContent = String(Error);
-  }
+    */
 });
-
-function showLoopCountButton(assemblyCounter: number) {}

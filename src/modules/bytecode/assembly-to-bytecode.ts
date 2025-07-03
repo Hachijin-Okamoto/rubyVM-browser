@@ -33,16 +33,6 @@ export function assemblyToBytecode(assemblyLines: assemblyLine[]): Uint8Array {
 
     labelAddress += calcInstrBytes(line);
   }
-  /*for (const line of assemblyLines) {
-    if (line.type === "loop_label" || line.type === "function_label") {
-      labelTable.set(line, labelAddress);
-      continue;
-    }
-
-    exceptLabelLines.push(line);
-
-    labelAddress += calcInstrBytes(line);
-  }*/
 
   let pc: number = 0;
   // 実際に変換

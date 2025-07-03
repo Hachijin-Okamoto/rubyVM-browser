@@ -26,7 +26,7 @@ export function calcInstrBytes(instruction: assemblyLine): number {
           3 + new TextEncoder().encode(instruction.value! as string).length
         );
       }
-      return instruction.value === null ? 1 : 3;
+      return instruction.value == null ? 1 : 3;
     }
 
     case "function_call": {
