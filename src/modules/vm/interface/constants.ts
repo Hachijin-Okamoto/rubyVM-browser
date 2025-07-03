@@ -1,4 +1,4 @@
-import { ASSEMBLY } from "../constants";
+import { ASSEMBLY } from "../../constants";
 
 export const OPCODES: Record<string, number> = {
   [ASSEMBLY.ADDITION]: 0x01,

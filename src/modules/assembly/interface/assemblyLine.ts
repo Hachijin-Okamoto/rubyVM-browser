@@ -9,7 +9,7 @@ export type assemblyLine =
 export interface Instruction {
   type: "instruction";
   name: string;
-  value?: number | string | LoopLabel;
+  value?: number | string | LoopLabel | FunctionLabel;
 }
 
 export interface FunctionCall {
