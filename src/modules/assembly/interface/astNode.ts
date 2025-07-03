@@ -1,4 +1,4 @@
-/* src/modules/interface.ts */
+/* src/modules/interface/astNode.ts */
 
 /**
  * astに関する型定義をまとめたもの
