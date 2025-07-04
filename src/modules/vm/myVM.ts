@@ -4,6 +4,7 @@ import { ASSEMBLY } from "../constants";
 import { OPCODES, OPCODE_NAMES } from "./interface/constants";
 import { VMLogEntry } from "./interface/VMLog";
 import { pcToAC } from "../counter-map";
+import { variableTable, invertVariableTable } from "../bytecode/bytecode-service";
 
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,6 +16,7 @@ export class MyVM {
   code: Uint8Array;
   envStack: Array<number[]> = [];
   callStack: number[] = [];
+  variableTable: Map<number, string> = new Map();
 
   // スタックの中身表示用
   logs: VMLogEntry[] = [];
@@ -24,6 +26,7 @@ export class MyVM {
     this.code = code;
     this.pc = this.findStart();
     this.envStack.push([]);
+    this.variableTable = invertVariableTable(variableTable);
   }
 
   findStart(): number {
@@ -83,6 +86,8 @@ export class MyVM {
         this.pc += len;
         const str: string = new TextDecoder().decode(strBytes);
         (this.stack as (number | string)[]).push(str);
+
+        this.lastInstructionInfo = {pushedValue: str};
         break;
       }
 
@@ -115,17 +120,24 @@ export class MyVM {
         const value: number = this.stack.pop()! as number;
         const variableId: number = this.readInt16();
         this.envStack[this.envStack.length - 1][variableId] = value!;
+
+        this.lastInstructionInfo = {poppedValues: value, description: `${this.variableTable.get(variableId)} <- ${value}`};
         break;
 
       // TODO:ここの変数命名何とかする（上と被り）
       case OPCODES[ASSEMBLY.REFERENCE]:
         const _variableId: number = this.readInt16();
-        this.stack.push(this.envStack[this.envStack.length - 1][_variableId]);
+        const _val = this.envStack[this.envStack.length - 1][_variableId];
+        this.stack.push(_val);
+
+        this.lastInstructionInfo = {pushedValue: _val};
         break;
 
       case OPCODES[ASSEMBLY.JUMP]:
         const address: number = this.readInt16();
         this.pc = address;
+
+        this.lastInstructionInfo = {description: `jump to ${address}`};
         break;
 
       case OPCODES[ASSEMBLY.JUMP_IF_FALSE]:
@@ -134,6 +146,8 @@ export class MyVM {
         if (condition === 0) {
           this.pc = _address;
         }
+
+        this.lastInstructionInfo = {poppedValues: condition, description: `jump if poppedValue is 0 to ${_address}`};
         break;
 
       case OPCODES[ASSEMBLY.RETURN]:
