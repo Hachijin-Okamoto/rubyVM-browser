@@ -3,7 +3,7 @@
 import { assemblyLine } from "../assembly/interface/assemblyLine";
 import { ASSEMBLY } from "../constants";
 
-const variableTable: Map<string, number> = new Map<string, number>();
+export const variableTable: Map<string, number> = new Map<string, number>();
 let variableId: number = 0;
 
 /**
@@ -16,7 +16,17 @@ export function getVariableId(name: string): number {
     variableTable.set(name, variableId++);
   }
   return variableTable.get(name)!;
+  
 }
+
+export function invertVariableTable(variableTable: Map<string, number>): Map<number, string> {
+  const inverted = new Map<number, string>();
+  for (const [name, index] of variableTable.entries()) {
+    inverted.set(index, name);
+  }
+  return inverted;
+}
+
 
 export function calcInstrBytes(instruction: assemblyLine): number {
   switch (instruction.type) {

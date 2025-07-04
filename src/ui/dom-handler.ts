@@ -1,5 +1,6 @@
 /* src/ui/dom-handler.ts */
 
+import { invertVariableTable, variableTable } from "../modules/bytecode/bytecode-service";
 import { VMLogEntry } from "../modules/vm/interface/VMLog";
 
 declare const Prism: any;
@@ -51,8 +52,10 @@ export function displayStack(log: VMLogEntry): void {
   infoBox.style.wordBreak = "break-word";
   infoBox.style.fontFamily = "monospace";
 
+  const invertedVariableTable = invertVariableTable(variableTable);
+
   // 内容の差し替え
-  const env = log.envSnapshot ? JSON.stringify(log.envSnapshot) : "(なし)";
+  const env = log.envSnapshot ? JSON.stringify(convertEnv(log.envSnapshot, invertedVariableTable)) : "(なし)";
   const popped = log.poppedValues ? JSON.stringify(log.poppedValues) : "(なし)";
   const pushed = log.pushedValue ? JSON.stringify(log.pushedValue) : "(なし)";
   const desc = log.description ?? "(なし)";
@@ -68,6 +71,21 @@ export function displayStack(log: VMLogEntry): void {
   stackDisplay.appendChild(infoBox);
 }
 
+function convertEnv(
+  envSnapshot: any[],
+  invertedVariableTable: Map<number, string>
+): any[] {
+  return envSnapshot.map((env) => {
+    const namedEnv: Record<string, any> = {};
+    for (const key in env) {
+      const index = Number(key);
+      const name = invertedVariableTable.get(index) ?? key;
+      namedEnv[name] = env[key];
+    }
+    return namedEnv;
+  });
+}
+
 export function showStepSelection(
   ac: number,
   matchingLogs: VMLogEntry[],
@@ -81,7 +99,7 @@ export function showStepSelection(
 
   matchingLogs.forEach((log) => {
     const button = document.createElement("button");
-    button.innerText = `ステップ ${log.step}（PC=${log.pc}）`;
+    button.innerText = `ステップ ${log.step}`;
     button.style.margin = "4px";
 
     button.addEventListener("click", () => {
