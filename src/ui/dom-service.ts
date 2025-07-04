@@ -7,7 +7,7 @@ export function handleAssemblyClick(ac: number, stackLogs: VMLogEntry[]): void {
   const matchingLogs = stackLogs.filter((log) => log.ac === ac);
 
   if (matchingLogs.length === 1) {
-    displayStack(matchingLogs[0].stackSnapshot);
+    displayStack(matchingLogs[0]);
   } else if (matchingLogs.length > 1) {
     showStepSelection(ac, matchingLogs);
   } else {

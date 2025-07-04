@@ -1,5 +1,3 @@
-/* src/main.ts */
-
 import { astNode } from "./modules/assembly/interface/astNode";
 import { generateAssembly } from "./modules/assembly/generateAssembly";
 import { assemblyToBytecode } from "./modules/bytecode/assembly-to-bytecode";
@@ -8,63 +6,72 @@ import { assemblyLine } from "./modules/assembly/interface/assemblyLine";
 import { formatAssemblyLine } from "./modules/assembly/assembly-service";
 import { handleAssemblyClick } from "./ui/dom-service";
 import { VMLogEntry } from "./modules/vm/interface/VMLog";
+import "./style.css";
 
-const jsonInput: HTMLTextAreaElement = document.getElementById(
-  "jsonInput",
-) as HTMLTextAreaElement;
-const runButton: HTMLButtonElement = document.getElementById(
-  "runButton",
-) as HTMLButtonElement;
+const fileInput = document.getElementById("jsonFileInput") as HTMLInputElement;
+const runButton = document.getElementById("runButton") as HTMLButtonElement;
 
-const assemblyOutput: HTMLElement = document.getElementById("assemblyOutput")!;
-const bytecodeOutput: HTMLElement = document.getElementById("bytecodeOutput")!;
-const resultOutput: HTMLElement = document.getElementById("resultOutput")!;
+const assemblyOutput = document.getElementById("assemblyOutput")!;
+const bytecodeOutput = document.getElementById("bytecodeOutput")!;
+const resultOutput = document.getElementById("resultOutput")!;
 
+let parsedAST: astNode | null = null;
+
+fileInput.addEventListener("change", (e) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+
+  const file = target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      parsedAST = JSON.parse(reader.result as string);
+      alert("ASTファイルを読み込みました。実行ボタンを押してください。");
+    } catch (err) {
+      alert("JSONの読み込みに失敗しました");
+      parsedAST = null;
+    }
+  };
+
+  reader.readAsText(file);
+});
+
+// 実行ボタン
 runButton.addEventListener("click", () => {
-  const ast_data: astNode = JSON.parse(jsonInput.value) as astNode;
+  if (!parsedAST) {
+    alert("ASTファイルを先に読み込んでください");
+    return;
+  }
+
+  assemblyOutput.innerHTML = "";
+  bytecodeOutput.textContent = "";
+  resultOutput.textContent = "";
 
   let assemblyLines: assemblyLine[] = [];
   let bytecode: Uint8Array;
   let stackLogs: VMLogEntry[];
 
   try {
-    assemblyLines = generateAssembly(ast_data);
+    assemblyLines = generateAssembly(parsedAST);
     bytecode = assemblyToBytecode(assemblyLines);
-    console.log(bytecode);
-    bytecodeOutput.textContent = String(bytecode.join(" "));
-    const vm: MyVM = new MyVM(bytecode);
+    bytecodeOutput.textContent = bytecode.join(" ");
+
+    const vm = new MyVM(bytecode);
     const { result, stackLogs: logs } = vm.runWithLog();
     resultOutput.textContent = result.join("\n");
     stackLogs = logs;
-  } catch (Error) {
-    console.log(Error);
-  }
 
-  assemblyLines.forEach((assemblyLine, index) => {
-    const line = document.createElement("div");
-    line.textContent = formatAssemblyLine(assemblyLine);
-    line.addEventListener("click", () => {
-      handleAssemblyClick(index, stackLogs);
-    });
-    assemblyOutput.appendChild(line);
-  });
-
-  /*
     assemblyLines.forEach((assemblyLine, index) => {
       const line = document.createElement("div");
       line.textContent = formatAssemblyLine(assemblyLine);
-      assemblyOutput.appendChild(line);
-
       line.addEventListener("click", () => {
-        const log = stackLogs.find((logs) => logs.pc === index);
-        stackPreview.textContent = log
-          ? JSON.stringify(log.stackSnapshot, null, 2)
-          : "No log for this line";
+        handleAssemblyClick(index, stackLogs);
       });
       assemblyOutput.appendChild(line);
     });
-  } catch (Error) {
-    assemblyOutput.textContent = String(Error);
-    return;
-    */
+  } catch (error) {
+    console.error(error);
+    alert("処理中にエラーが発生しました。詳細はコンソールをご確認ください。");
+  }
 });

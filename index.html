@@ -2,30 +2,126 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Ruby VM Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>rubyVM-Viewer</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    pre { background: #f0f0f0; padding: 0.5rem; border-radius: 5px; }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: monospace, monospace;
+    }
+
+    header {
+      background-color: #222;
+      color: white;
+      padding: 10px 20px;
+      font-size: 1.5em;
+    }
+
+    #file-loader {
+      padding: 10px 20px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #container {
+      display: flex;
+      height: calc(100vh - 100px); /* header + loader */
+      overflow: hidden;
+    }
+
+    #left-panel, #right-panel {
+      padding: 10px;
+      overflow: auto;
+    }
+
+    #left-panel {
+      width: 50%;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #right-panel {
+      width: 50%;
+    }
+
+    /* アセンブリコード（縦並び） */
+    #assemblyOutput {
+      flex: 1;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 10px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+
+    /* バイトコード（横並び） */
+    #bytecodeOutput {
+      flex: 0.5;
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      padding: 10px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 150px;
+    }
+
+    /* 実行結果 */
+    #resultOutput {
+      flex: 0.5;
+      background: #eef9ff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+    }
+
+    /* スタック表示 */
+    #stack-display {
+      height: 100%;
+      background: #fff8dc;
+      border: 1px solid #ddd;
+      padding: 10px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
   </style>
 </head>
 <body>
-  <h1>Ruby VM - AST 実行ビューア</h1>
+  <header>rubyVM-Viewer</header>
 
-  <label for="jsonInput">AST（JSON形式）を貼り付け：</label><br />
-  <textarea id="jsonInput" placeholder='{"type": "program", "body": [...]}'></textarea><br />
-  <button id="runButton">Run</button>
+  <div id="file-loader">
+    <label for="jsonFileInput">AST (.json) ファイルを選択:</label>
+    <input type="file" id="jsonFileInput" accept=".json" />
+    <button id="runButton">実行</button>
+  </div>
 
-  <h2>アセンブリ</h2>
-  <pre id="assemblyOutput"></pre>
+  <div id="container">
+    <div id="left-panel">
+      <section>
+        <h3>アセンブリコード</h3>
+        <pre id="assemblyOutput"></pre>
+      </section>
+      <section>
+        <h3>バイトコード</h3>
+        <pre id="bytecodeOutput"></pre>
+      </section>
+      <section>
+        <h3>実行結果</h3>
+        <pre id="resultOutput"></pre>
+      </section>
+    </div>
 
-  <h2>バイトコード</h2>
-  <pre id="bytecodeOutput"></pre>
-
-  <h2>実行結果</h2>
-  <pre id="resultOutput"></pre>
-
-  <h2>スタック</h2>
-  <div id="stack-display"></div>
+    <div id="right-panel">
+      <h3>スタック</h3>
+      <pre id="stack-display"></pre>
+    </div>
+  </div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

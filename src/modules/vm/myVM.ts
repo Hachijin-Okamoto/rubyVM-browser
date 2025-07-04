@@ -1,7 +1,7 @@
 /* src/modules/vm/myVM.ts */
 
 import { ASSEMBLY } from "../constants";
-import { OPCODES } from "./interface/constants";
+import { OPCODES, OPCODE_NAMES } from "./interface/constants";
 import { VMLogEntry } from "./interface/VMLog";
 import { pcToAC } from "../counter-map";
 
@@ -18,6 +18,7 @@ export class MyVM {
 
   // スタックの中身表示用
   logs: VMLogEntry[] = [];
+  lastInstructionInfo: any;
 
   constructor(code: Uint8Array) {
     this.code = code;
@@ -55,10 +56,12 @@ export class MyVM {
 
       this.logs.push({
         step: stepCounter++,
-        ac: pcToAC.get(this.pc)!,
+        ac: pcToAC.get(currentPC)!,
         pc: this.pc,
         opcode,
         stackSnapshot: [...this.stack],
+        envSnapshot: this.envStack.map((e) => ({ ...e })),
+        ...this.lastInstructionInfo,
       });
     }
 
@@ -70,6 +73,8 @@ export class MyVM {
       case OPCODES[ASSEMBLY.NUMBER]:
         const val: number = this.readInt16();
         this.stack.push(val);
+
+        this.lastInstructionInfo = { pushedValue: val };
         break;
 
       case OPCODES[ASSEMBLY.STRING]: {
@@ -92,11 +97,19 @@ export class MyVM {
       case OPCODES[ASSEMBLY.GREATER_EQUAL]:
       case OPCODES[ASSEMBLY.LESS_EQUAL]:
       case OPCODES[ASSEMBLY.EQUAL]:
-      case OPCODES[ASSEMBLY.NOT_EQUAL]:
-        const __b: number = this.stack.pop()! as number;
-        const __a: number = this.stack.pop()! as number;
-        this.stack.push(this.calc(__a, __b, opcode));
+      case OPCODES[ASSEMBLY.NOT_EQUAL]: {
+        const b: number = this.stack.pop()! as number;
+        const a: number = this.stack.pop()! as number;
+        const result: number = this.calc(a, b, opcode);
+        this.stack.push(result);
+
+        this.lastInstructionInfo = {
+          poppedValues: [a, b],
+          pushedValue: [result],
+          description: `${OPCODE_NAMES[opcode]} : ${a} ${b} -> ${result}`,
+        };
         break;
+      }
 
       case OPCODES[ASSEMBLY.ASSIGNMENT]:
         const value: number = this.stack.pop()! as number;
@@ -200,13 +213,13 @@ export class MyVM {
     }
   }
 
-  readInt16(): number {
+  private readInt16(): number {
     const bytes: Uint8Array = this.code.slice(this.pc, this.pc + 2);
     this.pc += 2;
     return bytes[0] | (bytes[1] << 8);
   }
 
-  calc(x: number, y: number, opcode: number): number {
+  private calc(x: number, y: number, opcode: number): number {
     switch (opcode) {
       case OPCODES[ASSEMBLY.ADDITION]:
         return x + y;
