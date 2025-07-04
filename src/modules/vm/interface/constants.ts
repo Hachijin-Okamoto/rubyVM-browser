@@ -29,3 +29,13 @@ export const OPCODES: Record<string, number> = {
   [ASSEMBLY.SHUFFLE]: 0x1a, //26
   [ASSEMBLY.END]: 0xff,
 } as const;
+
+export const OPCODE_NAMES: Record<number, string> = Object.entries(
+  OPCODES,
+).reduce(
+  (acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  },
+  {} as Record<number, string>,
+);

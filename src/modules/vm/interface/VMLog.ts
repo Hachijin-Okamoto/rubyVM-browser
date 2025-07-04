@@ -6,4 +6,8 @@ export type VMLogEntry = {
   pc: number; // バイトコード列の何列目か
   opcode: number;
   stackSnapshot: (number | string | any[])[];
+  envSnapshot?: any[];
+  poppedValues?: any[];
+  pushedValue?: any[];
+  description?: string;
 };
