@@ -4,7 +4,10 @@ import { ASSEMBLY } from "../constants";
 import { OPCODES, OPCODE_NAMES } from "./interface/constants";
 import { VMLogEntry } from "./interface/VMLog";
 import { pcToAC } from "../counter-map";
-import { variableTable, invertVariableTable } from "../bytecode/bytecode-service";
+import {
+  variableTable,
+  invertVariableTable,
+} from "../bytecode/bytecode-service";
 
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -87,7 +90,7 @@ export class MyVM {
         const str: string = new TextDecoder().decode(strBytes);
         (this.stack as (number | string)[]).push(str);
 
-        this.lastInstructionInfo = {pushedValue: str};
+        this.lastInstructionInfo = { pushedValue: str };
         break;
       }
 
@@ -121,7 +124,10 @@ export class MyVM {
         const variableId: number = this.readInt16();
         this.envStack[this.envStack.length - 1][variableId] = value!;
 
-        this.lastInstructionInfo = {poppedValues: value, description: `${this.variableTable.get(variableId)} <- ${value}`};
+        this.lastInstructionInfo = {
+          poppedValues: value,
+          description: `${this.variableTable.get(variableId)} <- ${value}`,
+        };
         break;
 
       // TODO:ここの変数命名何とかする（上と被り）
@@ -130,14 +136,14 @@ export class MyVM {
         const _val = this.envStack[this.envStack.length - 1][_variableId];
         this.stack.push(_val);
 
-        this.lastInstructionInfo = {pushedValue: _val};
+        this.lastInstructionInfo = { pushedValue: _val };
         break;
 
       case OPCODES[ASSEMBLY.JUMP]:
         const address: number = this.readInt16();
         this.pc = address;
 
-        this.lastInstructionInfo = {description: `jump to ${address}`};
+        this.lastInstructionInfo = { description: `jump to ${address}` };
         break;
 
       case OPCODES[ASSEMBLY.JUMP_IF_FALSE]:
@@ -147,7 +153,10 @@ export class MyVM {
           this.pc = _address;
         }
 
-        this.lastInstructionInfo = {poppedValues: condition, description: `jump if poppedValue is 0 to ${_address}`};
+        this.lastInstructionInfo = {
+          poppedValues: condition,
+          description: `jump if poppedValue is 0 to ${_address}`,
+        };
         break;
 
       case OPCODES[ASSEMBLY.RETURN]:

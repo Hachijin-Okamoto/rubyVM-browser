@@ -1,6 +1,9 @@
 /* src/ui/dom-handler.ts */
 
-import { invertVariableTable, variableTable } from "../modules/bytecode/bytecode-service";
+import {
+  invertVariableTable,
+  variableTable,
+} from "../modules/bytecode/bytecode-service";
 import { VMLogEntry } from "../modules/vm/interface/VMLog";
 
 declare const Prism: any;
@@ -16,7 +19,7 @@ export function displayStack(log: VMLogEntry): void {
   stackContainer.style.alignItems = "center";
   stackContainer.style.border = "2px solid #888";
   stackContainer.style.padding = "8px";
-  stackContainer.style.height = "400px";
+  stackContainer.style.height = "180px";
   stackContainer.style.width = "120px";
   stackContainer.style.overflowY = "auto";
   stackContainer.style.backgroundColor = "#f9f9f9";
@@ -55,7 +58,11 @@ export function displayStack(log: VMLogEntry): void {
   const invertedVariableTable = invertVariableTable(variableTable);
 
   // 内容の差し替え
-  const env = log.envSnapshot ? JSON.stringify(convertEnv(log.envSnapshot, invertedVariableTable)) : "(なし)";
+  const namedEnv = log.envSnapshot
+    ? convertEnv(log.envSnapshot, invertedVariableTable)
+    : [];
+
+  const env = namedEnvToString(namedEnv);
   const popped = log.poppedValues ? JSON.stringify(log.poppedValues) : "(なし)";
   const pushed = log.pushedValue ? JSON.stringify(log.pushedValue) : "(なし)";
   const desc = log.description ?? "(なし)";
@@ -69,11 +76,13 @@ export function displayStack(log: VMLogEntry): void {
 
   stackDisplay.appendChild(stackContainer);
   stackDisplay.appendChild(infoBox);
+
+  highlightAssemblyLine(log.ac);
 }
 
 function convertEnv(
   envSnapshot: any[],
-  invertedVariableTable: Map<number, string>
+  invertedVariableTable: Map<number, string>,
 ): any[] {
   return envSnapshot.map((env) => {
     const namedEnv: Record<string, any> = {};
@@ -84,6 +93,46 @@ function convertEnv(
     }
     return namedEnv;
   });
+}
+
+function namedEnvToString(namedEnv: any[]): string {
+  if (namedEnv.length === 0) return "(なし)";
+
+  return namedEnv
+    .map((env, index) => {
+      const vars = Object.entries(env)
+        .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+        .join(", ");
+      return `${vars}`;
+    })
+    .join("\n");
+}
+
+export function displayVariables(envSnapshot: any[]): HTMLElement {
+  const container = document.createElement("div");
+
+  envSnapshot.forEach((env, envIndex) => {
+    const envBlock = document.createElement("div");
+    envBlock.style.marginBottom = "10px";
+    envBlock.style.border = "1px solid #ccc";
+    envBlock.style.padding = "5px";
+    envBlock.style.backgroundColor = "#fefefe";
+
+    const title = document.createElement("div");
+    title.textContent = `環境 ${envIndex}`;
+    title.style.fontWeight = "bold";
+    envBlock.appendChild(title);
+
+    for (const key in env) {
+      const row = document.createElement("div");
+      row.textContent = `${key} = ${JSON.stringify(env[key])}`;
+      envBlock.appendChild(row);
+    }
+
+    container.appendChild(envBlock);
+  });
+
+  return container;
 }
 
 export function showStepSelection(
@@ -113,4 +162,15 @@ export function showStepSelection(
 export function displayNoStack(): void {
   const stackDisplay: HTMLElement = document.getElementById("stack-display")!;
   stackDisplay.innerText = "";
+}
+
+export function highlightAssemblyLine(targetAc: number): void {
+  const lines = document.querySelectorAll<HTMLElement>(".assembly-line");
+  lines.forEach((line) => {
+    if (parseInt(line.dataset.ac || "-1") === targetAc) {
+      line.style.backgroundColor = "#ffe6cc"; // ハイライト色
+    } else {
+      line.style.backgroundColor = ""; // 元に戻す
+    }
+  });
 }
