@@ -1,5 +1,6 @@
-/* src/modules/constants.ts */
+/* modules/constants.ts */
 
+// eslint-disable-next-line @typescript-eslint/typedef
 export const ASSEMBLY = {
   // 四則演算
   ADDITION: "ADD",

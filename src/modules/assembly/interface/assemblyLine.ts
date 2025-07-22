@@ -1,4 +1,4 @@
-/* src/modules/assembly/interface/assemblyLine.ts */
+/* modules/assembly/interface/assemblyLine.ts */
 
 export type assemblyLine =
   | Instruction
@@ -27,4 +27,11 @@ export interface LoopLabel {
 export interface FunctionLabel {
   type: "function_label";
   name: string;
+}
+
+/**
+ * 型ガード関数
+ */
+export function isLoopLabel(line: unknown): line is LoopLabel {
+  return (line as LoopLabel).type === "loop_label";
 }

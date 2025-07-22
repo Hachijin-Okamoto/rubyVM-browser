@@ -1,4 +1,4 @@
-/* src/modules/interface/astNode.ts */
+/* modules/interface/astNode.ts */
 
 /**
  * astに関する型定義をまとめたもの
@@ -143,4 +143,16 @@ interface ArrayNode {
   type: "array_node";
   flags?: number;
   elements: astNode[];
+}
+
+/**
+ * 型ガード関数
+ */
+export function isAstNode(obj: unknown): obj is astNode {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "type" in obj &&
+    typeof (obj as { type?: unknown }).type === "string"
+  );
 }

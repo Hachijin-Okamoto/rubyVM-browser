@@ -1,4 +1,4 @@
-/* src/modules/vm/myVM.ts */
+/* modules/vm/myVM.ts */
 
 import { ASSEMBLY } from "../constants";
 import { OPCODES, OPCODE_NAMES } from "./interface/constants";
@@ -74,7 +74,7 @@ export class MyVM {
     return { result, stackLogs: this.logs };
   }
 
-  private execute(opcode: number) {
+  private execute(opcode: number): number | string | any[] | undefined {
     switch (opcode) {
       case OPCODES[ASSEMBLY.NUMBER]:
         const val: number = this.readInt16();
@@ -133,7 +133,8 @@ export class MyVM {
       // TODO:ここの変数命名何とかする（上と被り）
       case OPCODES[ASSEMBLY.REFERENCE]:
         const _variableId: number = this.readInt16();
-        const _val = this.envStack[this.envStack.length - 1][_variableId];
+        const _val: number =
+          this.envStack[this.envStack.length - 1][_variableId];
         this.stack.push(_val);
 
         this.lastInstructionInfo = { pushedValue: _val };
@@ -199,7 +200,7 @@ export class MyVM {
       case OPCODES[ASSEMBLY.ARRAY_DEFINITION]:
         const length: number = this.readInt16();
         const newArray: any[] = [];
-        for (let i = 0; i < length; i++) {
+        for (let i: number = 0; i < length; i++) {
           newArray.unshift(this.stack.pop());
         }
         this.stack.push(newArray);
@@ -221,8 +222,8 @@ export class MyVM {
       case OPCODES[ASSEMBLY.SHUFFLE]:
         const targetArrayShuffle: any[] = this.stack.pop()! as any[];
         const _newArray: any[] = [...targetArrayShuffle];
-        for (let i = _newArray.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
+        for (let i: number = _newArray.length - 1; i > 0; i--) {
+          const j: number = Math.floor(Math.random() * (i + 1));
           [_newArray[i], _newArray[j]] = [_newArray[j], _newArray[i]];
         }
         this.stack.push(_newArray);
