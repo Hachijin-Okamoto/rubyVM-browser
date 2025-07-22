@@ -1,4 +1,4 @@
-/* src/modules/bytecode/bytecode-service.ts */
+/* modules/bytecode/bytecode-service.ts */
 
 import { assemblyLine } from "../assembly/interface/assemblyLine";
 import { ASSEMBLY } from "../constants";
@@ -21,7 +21,7 @@ export function getVariableId(name: string): number {
 export function invertVariableTable(
   variableTable: Map<string, number>,
 ): Map<number, string> {
-  const inverted = new Map<number, string>();
+  const inverted: Map<number, string> = new Map<number, string>();
   for (const [name, index] of variableTable.entries()) {
     inverted.set(index, name);
   }

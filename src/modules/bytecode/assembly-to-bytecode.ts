@@ -1,9 +1,6 @@
-/* src/modules/bytecode/assembly-to-bytecode.ts */
+/* modules/bytecode/assembly-to-bytecode.ts */
 
-import {
-  assemblyLine,
-  FunctionLabel,
-} from "../assembly/interface/assemblyLine";
+import { assemblyLine, isLoopLabel } from "../assembly/interface/assemblyLine";
 import { ASSEMBLY } from "../constants";
 import { OPCODES } from "../vm/interface/constants";
 import { getVariableId, calcInstrBytes } from "./bytecode-service";
@@ -37,7 +34,7 @@ export function assemblyToBytecode(assemblyLines: assemblyLine[]): Uint8Array {
   let pc: number = 0;
   // 実際に変換
   const bytes: number[] = [];
-  for (let i = 0; i < assemblyLines.length; i++) {
+  for (let i: number = 0; i < assemblyLines.length; i++) {
     const line: assemblyLine = assemblyLines[i];
 
     if (line.type === "loop_label" || line.type === "function_label") {
@@ -69,7 +66,7 @@ export function assemblyToBytecode(assemblyLines: assemblyLine[]): Uint8Array {
       } else if (
         typeof line.value === "object" &&
         line.value !== null &&
-        (line.value as any).type === "loop_label"
+        isLoopLabel(line.value)
       ) {
         oprand = labelTable.get(line.value.name)!;
       } else {

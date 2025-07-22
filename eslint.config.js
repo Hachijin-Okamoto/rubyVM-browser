@@ -39,6 +39,15 @@ export default defineConfig([
       ],
       "@typescript-eslint/explicit-module-boundary-types": "warn",
       "@typescript-eslint/no-inferrable-types": "off",
+      "@typescript-eslint/typedef": [
+        "warn",
+        {
+          variableDeclaration: true,
+          memberVariableDeclaration: true,
+          propertyDeclaration: true,
+          parameter: false, 
+        },
+      ],
     },
   },
   ...tseslint.configs.recommended,
